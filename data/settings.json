@@ -9,5 +9,5 @@
   "googleAnalyticsId": "",
   "customHeadScripts": "",
   "adminPin": "jr",
-  "requireAuth": true
+  "requireAuth": false
 }

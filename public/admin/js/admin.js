@@ -14,11 +14,57 @@ document.addEventListener('DOMContentLoaded', () => {
   const linkModal = document.getElementById('linkModal');
   const qrModal = document.getElementById('qrModal');
   const authModal = document.getElementById('authModal');
+  const authForm = document.getElementById('authForm');
+  const authPinInput = document.getElementById('authPinInput');
   const linkForm = document.getElementById('linkForm');
   const modalLinkTitle = document.getElementById('modalLinkTitle');
   const closeLinkModalBtn = document.getElementById('closeLinkModalBtn');
   const cancelLinkModalBtn = document.getElementById('cancelLinkModalBtn');
   const closeQrModalBtn = document.getElementById('closeQrModalBtn');
+
+  // Gerenciamento de Autenticação / Token
+  let adminToken = localStorage.getItem('adminToken') || '';
+
+  async function apiFetch(url, options = {}) {
+    options.headers = options.headers || {};
+    if (adminToken) {
+      options.headers['x-admin-token'] = adminToken;
+    }
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+      if (authModal) authModal.style.display = 'flex';
+    }
+    return res;
+  }
+
+  if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pin = (authPinInput?.value || '').trim();
+      if (!pin) return;
+      try {
+        const res = await fetch('/api/admin/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+          adminToken = data.token;
+          localStorage.setItem('adminToken', adminToken);
+          authModal.style.display = 'none';
+          if (authPinInput) authPinInput.value = '';
+          showToast('Autenticado com sucesso!', 'success');
+          loadAllData();
+          loadLeads();
+        } else {
+          showToast(data.message || 'PIN incorreto.', 'error');
+        }
+      } catch (err) {
+        showToast('Erro ao autenticar.', 'error');
+      }
+    });
+  }
 
   // Inputs do Modal Link
   const linkIdInput = document.getElementById('linkIdInput');
@@ -127,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Carregar Estatísticas e Links
   async function loadStats() {
-    const res = await fetch('/api/admin/stats');
+    const res = await apiFetch('/api/admin/stats');
     const data = await res.json();
 
     if (!data.success) return;
@@ -172,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Carregar Configurações
   async function loadSettings() {
-    const res = await fetch('/api/admin/settings');
+    const res = await apiFetch('/api/admin/settings');
     const data = await res.json();
 
     if (!data.success) return;
@@ -312,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
       toggle.addEventListener('change', async (e) => {
         const linkId = e.target.getAttribute('data-id');
         try {
-          const res = await fetch(`/api/admin/links/${linkId}/toggle`, { method: 'PATCH' });
+          const res = await apiFetch(`/api/admin/links/${linkId}/toggle`, { method: 'PATCH' });
           const data = await res.json();
           if (data.success) {
             showToast(data.message, 'success');
@@ -362,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const link = currentLinks.find(l => l.id === linkId);
         if (confirm(`Tem certeza que deseja excluir "${link ? link.name : ''}"?`)) {
           try {
-            const res = await fetch(`/api/admin/links/${linkId}`, { method: 'DELETE' });
+            const res = await apiFetch(`/api/admin/links/${linkId}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
               showToast(data.message, 'success');
@@ -492,13 +538,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let res, data;
       if (linkId) {
-        res = await fetch(`/api/admin/links/${linkId}`, {
+        res = await apiFetch(`/api/admin/links/${linkId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
       } else {
-        res = await fetch('/api/admin/links', {
+        res = await apiFetch('/api/admin/links', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -588,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fallbackUrl = fallbackUrlInput.value.trim();
 
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await apiFetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rotationStrategy: selectedStrat, fallbackUrl })
@@ -621,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await apiFetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -639,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
   resetStatsBtn.addEventListener('click', async () => {
     if (confirm('Atenção: Isso irá zerar todos os contadores de cliques e logs de acessos. Deseja continuar?')) {
       try {
-        const res = await fetch('/api/admin/reset-stats', { method: 'POST' });
+        const res = await apiFetch('/api/admin/reset-stats', { method: 'POST' });
         const data = await res.json();
         if (data.success) {
           showToast(data.message, 'success');
@@ -664,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onload = async (event) => {
       try {
         const json = JSON.parse(event.target.result);
-        const res = await fetch('/api/admin/import', {
+        const res = await apiFetch('/api/admin/import', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(json)
@@ -756,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
       simulateKommoWebhookBtn.disabled = true;
       simulateKommoWebhookBtn.textContent = '⏳ Simulando...';
       try {
-        const res = await fetch('/api/admin/leads/test-simulate', {
+        const res = await apiFetch('/api/admin/leads/test-simulate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -791,8 +837,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!leadsTableBody) return;
     try {
       const [leadsRes, statsRes] = await Promise.all([
-        fetch('/api/admin/leads'),
-        fetch('/api/admin/stats')
+        apiFetch('/api/admin/leads'),
+        apiFetch('/api/admin/stats')
       ]);
       const leadsData = await leadsRes.json();
       const statsData = await statsRes.json();
@@ -866,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const leadId = e.currentTarget.getAttribute('data-id');
           if (!confirm('Deseja realmente excluir este lead?')) return;
           try {
-            const res = await fetch(`/api/admin/leads/${leadId}`, { method: 'DELETE' });
+            const res = await apiFetch(`/api/admin/leads/${leadId}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
               showToast('Lead removido!', 'success');
