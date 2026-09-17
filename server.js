@@ -521,6 +521,19 @@ async function handleKommoWebhook(req, reply) {
 app.post('/api/webhook/kommo', handleKommoWebhook);
 app.post('/webhook/kommo', handleKommoWebhook);
 
+// Health check para testes no navegador
+app.get('/api/webhook/kommo', async (req, reply) => {
+  return {
+    status: 'online',
+    message: 'Webhook do Kommo CRM ativo e pronto para receber requisições POST.',
+    timestamp: new Date().toISOString(),
+    endpoint: '/api/webhook/kommo'
+  };
+});
+app.get('/webhook/kommo', async (req, reply) => {
+  return reply.redirect('/api/webhook/kommo');
+});
+
 // ==========================================
 // ADMIN — Logs do Webhook Kommo
 // ==========================================
