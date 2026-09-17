@@ -929,15 +929,107 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Carrega leads quando a aba for clicada
+  // Carrega leads e logs quando a aba for clicada
   document.querySelector('[data-tab="leads"]')?.addEventListener('click', () => {
     loadLeads();
+    loadWebhookLogs();
   });
+
+  const webhookLogsTableBody  = document.getElementById('webhookLogsTableBody');
+  const refreshWebhookLogsBtn = document.getElementById('refreshWebhookLogsBtn');
+  const clearWebhookLogsBtn   = document.getElementById('clearWebhookLogsBtn');
+
+  if (refreshWebhookLogsBtn) {
+    refreshWebhookLogsBtn.addEventListener('click', () => {
+      loadWebhookLogs();
+      showToast('Logs de webhooks atualizados!', 'success');
+    });
+  }
+
+  if (clearWebhookLogsBtn) {
+    clearWebhookLogsBtn.addEventListener('click', async () => {
+      if (!confirm('Deseja realmente limpar todos os logs de webhooks?')) return;
+      try {
+        const res = await apiFetch('/api/admin/webhook-logs', { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Logs limpos com sucesso.', 'success');
+          loadWebhookLogs();
+        }
+      } catch (_) {
+        showToast('Erro ao limpar logs.', 'error');
+      }
+    });
+  }
+
+  async function loadWebhookLogs() {
+    if (!webhookLogsTableBody) return;
+    try {
+      const res = await apiFetch('/api/admin/webhook-logs');
+      const data = await res.json();
+      if (!data.success) return;
+
+      const logs = data.logs || [];
+      if (!logs.length) {
+        webhookLogsTableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-4 text-muted">
+              Nenhum disparo de webhook registrado ainda.<br>
+              <small>Assim que o Kommo fizer um POST na URL do webhook, a requisição aparecerá aqui imediatamente com o diagnóstico.</small>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      webhookLogsTableBody.innerHTML = logs.map(l => {
+        const dateStr = l.timestamp ? new Date(l.timestamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'medium' }) : '-';
+        const matchBadge = l.matched
+          ? `<span class="badge" style="background: rgba(37, 211, 102, 0.15); color: #25d366; font-weight: 600;">✅ Vínculo Confirmado (Código Encontrado)</span>`
+          : `<span class="badge" style="background: rgba(234, 179, 8, 0.15); color: #eab308; font-weight: 600;" title="${escapeHtml(l.statusText || '')}">⚠️ Texto Puro (Sem Código Invisível)</span>`;
+
+        const campaignBadge = l.matched && l.campaign !== '-'
+          ? `<strong style="color: #6366f1;">${escapeHtml(l.campaign)}</strong><br><small class="text-muted">${escapeHtml(l.source)}</small>`
+          : `<span class="text-muted">-</span>`;
+
+        return `
+          <tr>
+            <td class="font-mono" style="font-size: 0.82rem; white-space: nowrap;">${dateStr}</td>
+            <td>
+              <strong>${escapeHtml(l.sender || 'Desconhecido')}</strong>
+              ${l.phone ? `<br><small class="font-mono text-muted">${escapeHtml(l.phone)}</small>` : ''}
+            </td>
+            <td style="max-width: 260px; word-break: break-word;">
+              <code style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem;">${escapeHtml(l.receivedText || '')}</code>
+            </td>
+            <td>
+              ${matchBadge}<br>
+              <small class="text-muted" style="font-size: 0.75rem;">${escapeHtml(l.statusText || '')}</small>
+            </td>
+            <td>${campaignBadge}</td>
+            <td><small class="font-mono text-muted">${escapeHtml(l.ip || '-')}</small></td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error('Erro ao carregar logs de webhook:', err);
+    }
+  }
+
+  // Auto-refresh a cada 6 segundos se estiver na aba leads
+  setInterval(() => {
+    const leadsTab = document.getElementById('tab-leads');
+    if (leadsTab && leadsTab.classList.contains('active')) {
+      loadLeads();
+      loadWebhookLogs();
+    }
+  }, 6000);
 
   // Inicializar
   async function init() {
     await loadAllData();
     await loadLeads();
+    await loadWebhookLogs();
   }
 
   init();
