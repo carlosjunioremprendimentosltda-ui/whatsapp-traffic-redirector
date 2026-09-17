@@ -244,7 +244,8 @@ function processRedirect(link, query, req) {
     raw = settingsStore.fallbackUrl || 'https://web.whatsapp.com';
   }
 
-  const finalUrl = settingsStore.forwardUtms !== false ? mergeUtms(raw, query) : raw;
+  const isWhatsApp = raw.includes('wa.me') || raw.includes('whatsapp.com');
+  const finalUrl   = (!isWhatsApp && settingsStore.forwardUtms !== false) ? mergeUtms(raw, query) : raw;
 
   if (link) {
     link.totalClicks = (link.totalClicks || 0) + 1;
