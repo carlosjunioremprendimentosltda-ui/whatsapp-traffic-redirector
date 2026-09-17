@@ -10,7 +10,7 @@ const zeroWidth = require('./lib/zero-width');
 // CONFIGURAÇÃO
 // ==========================================
 const PORT     = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 
 const LINKS_FILE    = path.join(DATA_DIR, 'links.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
