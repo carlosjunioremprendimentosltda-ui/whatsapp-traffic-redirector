@@ -1,0 +1,96 @@
+{
+  "ev_mu501zvta0a232af": {
+    "eventId": "ev_mu501zvta0a232af",
+    "createdAt": "2026-09-17T03:58:24.233Z",
+    "ip": "127.0.0.1",
+    "userAgent": "node",
+    "referer": "",
+    "device": {
+      "isIOS": false,
+      "isAndroid": false,
+      "isTikTok": false,
+      "isFacebook": false,
+      "isInstagram": false
+    },
+    "utms": {
+      "source": "tiktok",
+      "medium": "",
+      "campaign": "blackfriday",
+      "content": "",
+      "term": ""
+    },
+    "clickIds": {
+      "fbclid": "",
+      "gclid": "",
+      "ttclid": "tt_998877",
+      "sck": ""
+    },
+    "linkId": "link_1",
+    "linkName": "Link 1 - Utmify / Tracker",
+    "targetPhone": "",
+    "status": "pending"
+  },
+  "ev_mu502r3z681373c8": {
+    "eventId": "ev_mu502r3z681373c8",
+    "createdAt": "2026-09-17T03:58:59.519Z",
+    "ip": "127.0.0.1",
+    "userAgent": "node",
+    "referer": "",
+    "device": {
+      "isIOS": false,
+      "isAndroid": false,
+      "isTikTok": false,
+      "isFacebook": false,
+      "isInstagram": false
+    },
+    "utms": {
+      "source": "meta",
+      "medium": "",
+      "campaign": "promo_tintim",
+      "content": "",
+      "term": ""
+    },
+    "clickIds": {
+      "fbclid": "fb_998877",
+      "gclid": "",
+      "ttclid": "",
+      "sck": ""
+    },
+    "linkId": "link_2",
+    "linkName": "Link 2 - WhatsApp Atendente",
+    "targetPhone": "5511988882222",
+    "status": "pending"
+  },
+  "ev_mu503e40bfa12fbb": {
+    "eventId": "ev_mu503e40bfa12fbb",
+    "createdAt": "2026-09-17T03:59:29.328Z",
+    "ip": "127.0.0.1",
+    "userAgent": "node",
+    "referer": "",
+    "device": {
+      "isIOS": false,
+      "isAndroid": false,
+      "isTikTok": false,
+      "isFacebook": false,
+      "isInstagram": false
+    },
+    "utms": {
+      "source": "instagram",
+      "medium": "stories",
+      "campaign": "blackfriday2026",
+      "content": "",
+      "term": ""
+    },
+    "clickIds": {
+      "fbclid": "fb_click_999",
+      "gclid": "",
+      "ttclid": "",
+      "sck": ""
+    },
+    "linkId": "link_2",
+    "linkName": "Link 2 - WhatsApp Atendente",
+    "targetPhone": "5511988882222",
+    "status": "converted",
+    "convertedAt": "2026-09-17T03:59:29.346Z"
+  }
+}

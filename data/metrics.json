@@ -1,0 +1,305 @@
+{
+  "totalRedirects": 18,
+  "todayRedirects": 3,
+  "lastResetDate": "2026-09-17",
+  "roundRobinIndex": 1,
+  "logs": [
+    {
+      "id": "log_1789617569328_pb7o",
+      "eventId": "ev_mu503e40bfa12fbb",
+      "timestamp": "2026-09-17T03:59:29.328Z",
+      "linkId": "link_2",
+      "linkName": "Link 2 - WhatsApp Atendente",
+      "targetUrl": "https://wa.me/5511988882222?text=Ol%C3%A1%21+Vim+pelo+an%C3%BAncio.%EF%BB%BF%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8B%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8B%EF%BB%BF&utm_source=instagram&utm_medium=stories&utm_campaign=blackfriday2026&fbclid=fb_click_999",
+      "userAgent": "node",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      },
+      "utms": {
+        "source": "instagram",
+        "medium": "stories",
+        "campaign": "blackfriday2026",
+        "content": "",
+        "term": ""
+      }
+    },
+    {
+      "id": "log_1789617539520_kls4",
+      "eventId": "ev_mu502r3z681373c8",
+      "timestamp": "2026-09-17T03:58:59.520Z",
+      "linkId": "link_2",
+      "linkName": "Link 2 - WhatsApp Atendente",
+      "targetUrl": "https://wa.me/5511988882222?text=Ol%C3%A1%21+Vim+pelo+an%C3%BAncio.%EF%BB%BF%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8C%E2%80%8C%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8C%E2%80%8C%E2%81%A0%E2%80%8C%E2%80%8C%E2%80%8C%E2%80%8B%E2%80%8B%E2%80%8B%EF%BB%BF&utm_source=meta&utm_campaign=promo_tintim&fbclid=fb_998877",
+      "userAgent": "node",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      },
+      "utms": {
+        "source": "meta",
+        "medium": "",
+        "campaign": "promo_tintim",
+        "content": "",
+        "term": ""
+      }
+    },
+    {
+      "id": "log_1789617504234_dxjt",
+      "eventId": "ev_mu501zvta0a232af",
+      "timestamp": "2026-09-17T03:58:24.234Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026&event_id=ev_mu501zvta0a232af&utm_source=tiktok&utm_campaign=blackfriday&ttclid=tt_998877",
+      "userAgent": "node",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      },
+      "utms": {
+        "source": "tiktok",
+        "medium": "",
+        "campaign": "blackfriday",
+        "content": "",
+        "term": ""
+      }
+    },
+    {
+      "id": "log_1789483323360_bibe",
+      "timestamp": "2026-09-15T14:42:03.360Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789483315657_fxff",
+      "timestamp": "2026-09-15T14:41:55.657Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789483308811_mngw",
+      "timestamp": "2026-09-15T14:41:48.811Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789478348093_m11t",
+      "timestamp": "2026-09-15T13:19:08.093Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789478342257_9etb",
+      "timestamp": "2026-09-15T13:19:02.257Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789478136105_rjyk",
+      "timestamp": "2026-09-15T13:15:36.105Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "node",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789478136103_o3y1",
+      "timestamp": "2026-09-15T13:15:36.103Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "node",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789478136100_cbwb",
+      "timestamp": "2026-09-15T13:15:36.100Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "node",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789478136097_l3ul",
+      "timestamp": "2026-09-15T13:15:36.097Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "node",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789478136087_gusi",
+      "timestamp": "2026-09-15T13:15:36.087Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "node",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789478111496_ahvs",
+      "timestamp": "2026-09-15T13:15:11.496Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "node",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789477895385_w7c5",
+      "timestamp": "2026-09-15T13:11:35.385Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026&utm_source=tiktok&utm_medium=cpc&utm_campaign=blackfriday",
+      "userAgent": "curl/8.21.0",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789477873278_rpc3",
+      "timestamp": "2026-09-15T13:11:13.278Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "curl/8.21.0",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1789477549259_i3vk",
+      "timestamp": "2026-09-15T13:05:49.259Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "userAgent": "curl/8.21.0",
+      "device": {
+        "isIOS": false,
+        "isAndroid": false,
+        "isTikTok": false,
+        "isFacebook": false,
+        "isInstagram": false
+      }
+    },
+    {
+      "id": "log_1788738013613_bcjo",
+      "timestamp": "2026-09-06T23:40:13.613Z",
+      "linkId": "link_1",
+      "linkName": "Link 1 - Utmify / Tracker",
+      "targetUrl": "https://meutracker.com/r/link-utmify?campaign_internal=promo_2026",
+      "ip": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "referer": "http://localhost:3000/",
+      "utms": {
+        "source": "",
+        "medium": "",
+        "campaign": "",
+        "content": "",
+        "term": "",
+        "all": {}
+      }
+    }
+  ]
+}

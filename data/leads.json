@@ -1,0 +1,38 @@
+[
+  {
+    "id": "lead_1789617569346_3042",
+    "eventId": "ev_mu503e40bfa12fbb",
+    "phone": "5586994112233",
+    "name": "Lead WhatsApp",
+    "cleanMessage": "Olá! Vim pelo anúncio.",
+    "rawMessage": "Olá! Vim pelo anúncio.﻿‌‌​​‌​‌⁠‌‌‌​‌‌​⁠‌​‌‌‌‌‌⁠‌‌​‌‌​‌⁠‌‌‌​‌​‌⁠‌‌​‌​‌⁠‌‌​​​​⁠‌‌​​‌‌⁠‌‌​​‌​‌⁠‌‌​‌​​⁠‌‌​​​​⁠‌‌​​​‌​⁠‌‌​​‌‌​⁠‌‌​​​​‌⁠‌‌​​​‌⁠‌‌​​‌​⁠‌‌​​‌‌​⁠‌‌​​​‌​⁠‌‌​​​‌​﻿",
+    "ip": "127.0.0.1",
+    "userAgent": "node",
+    "device": {
+      "isIOS": false,
+      "isAndroid": false,
+      "isTikTok": false,
+      "isFacebook": false,
+      "isInstagram": false
+    },
+    "utms": {
+      "source": "instagram",
+      "medium": "stories",
+      "campaign": "blackfriday2026",
+      "content": "",
+      "term": ""
+    },
+    "clickIds": {
+      "fbclid": "fb_click_999",
+      "gclid": "",
+      "ttclid": "",
+      "sck": ""
+    },
+    "linkId": "link_2",
+    "linkName": "Link 2 - WhatsApp Atendente",
+    "clickTime": "2026-09-17T03:59:29.328Z",
+    "leadTime": "2026-09-17T03:59:29.346Z",
+    "matchDelaySeconds": 0,
+    "status": "matched"
+  }
+]
