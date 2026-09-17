@@ -373,19 +373,47 @@ function scanForContact(data) {
   return { phone, name };
 }
 
+const qs = require('qs');
+
 async function handleKommoWebhook(req, reply) {
-  const body = req.body || {};
+  let body = req.body || {};
   const query = req.query || {};
+
+  // Se o payload vier embrulhado por proxies ou testadores de webhook (ex: apiteste) contendo { raw: "..." }:
+  if (typeof body.raw === 'string') {
+    try {
+      const parsed = qs.parse(body.raw);
+      body = { ...parsed, ...body };
+    } catch (_) {}
+  } else if (typeof body === 'string') {
+    try {
+      body = qs.parse(body);
+    } catch (_) {}
+  }
+
   const payloadToScan = Object.keys(body).length ? body : query;
+
+  // Extrai informações do contato para diagnóstico
+  const contact = scanForContact(payloadToScan);
 
   // 1. Procura o eventId embutido nos caracteres invisíveis
   const found = scanForZeroWidth(payloadToScan);
 
   if (!found) {
+    // Procura o texto puro da mensagem recebida para logar
+    let receivedText = '';
+    try {
+      if (body.message?.add?.[0]?.text) receivedText = body.message.add[0].text;
+    } catch (_) {}
+
+    console.log(`[Kommo Webhook] Mensagem recebida de "${contact.name || 'Desconhecido'}": "${receivedText}". Caracteres invisíveis: NÃO ENCONTRADOS.`);
+
     return reply.send({
       success: true,
       matched: false,
-      message: 'Webhook recebido com sucesso, mas nenhum código invisível foi detectado nesta mensagem.',
+      sender: contact.name || 'Desconhecido',
+      receivedText: receivedText || 'Mensagem sem texto',
+      message: `Webhook recebido do Kommo com sucesso, mas a mensagem "${receivedText || ''}" não continha caracteres invisíveis de rastreamento (o usuário provavelmente digitou manualmente no WhatsApp em vez de enviar pelo link do anúncio).`,
     });
   }
 
@@ -393,8 +421,7 @@ async function handleKommoWebhook(req, reply) {
   const session = sessionsStore.get(eventId);
   const now = new Date();
 
-  // 2. Extrai dados de contato
-  const contact = scanForContact(payloadToScan);
+  // 2. Extrai dados de contato e limpa mensagem
   const cleanMsg = zeroWidth.cleanMessage(rawText);
 
   let matchDelaySeconds = null;
