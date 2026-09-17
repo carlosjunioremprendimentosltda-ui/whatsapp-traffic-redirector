@@ -12,22 +12,24 @@ const zeroWidth = require('./lib/zero-width');
 const PORT     = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 
-const LINKS_FILE    = path.join(DATA_DIR, 'links.json');
-const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
-const METRICS_FILE  = path.join(DATA_DIR, 'metrics.json');
-const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
-const LEADS_FILE    = path.join(DATA_DIR, 'leads.json');
+const LINKS_FILE        = path.join(DATA_DIR, 'links.json');
+const SETTINGS_FILE     = path.join(DATA_DIR, 'settings.json');
+const METRICS_FILE      = path.join(DATA_DIR, 'metrics.json');
+const SESSIONS_FILE     = path.join(DATA_DIR, 'sessions.json');
+const LEADS_FILE        = path.join(DATA_DIR, 'leads.json');
+const WEBHOOK_LOGS_FILE = path.join(DATA_DIR, 'webhook_logs.json');
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 // ==========================================
 // STORE EM MEMÓRIA (RAM) — acesso < 0.01ms
 // ==========================================
-let linksStore    = [];
-let settingsStore = {};
-let metricsStore  = { totalRedirects: 0, todayRedirects: 0, roundRobinIndex: 0, logs: [], lastResetDate: '' };
-let sessionsStore = new Map(); // eventId → { eventId, ip, utms, clickIds, userAgent, linkName, status, createdAt }
-let leadsStore    = [];        // array de leads convertidos via Kommo CRM
+let linksStore       = [];
+let settingsStore    = {};
+let metricsStore     = { totalRedirects: 0, todayRedirects: 0, roundRobinIndex: 0, logs: [], lastResetDate: '' };
+let sessionsStore    = new Map(); // eventId → { eventId, ip, utms, clickIds, userAgent, linkName, status, createdAt }
+let leadsStore       = [];        // array de leads convertidos via Kommo CRM
+let webhookLogsStore = [];        // histórico de TODAS as requisições de webhook recebidas do Kommo
 
 const tokenStore     = new Map(); // token → { expiresAt }
 const rateLimitStore = new Map(); // ip    → { attempts, blockedUntil }
@@ -49,6 +51,10 @@ function loadAll() {
   try {
     leadsStore = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf-8'));
   } catch (_) { leadsStore = []; }
+
+  try {
+    webhookLogsStore = JSON.parse(fs.readFileSync(WEBHOOK_LOGS_FILE, 'utf-8'));
+  } catch (_) { webhookLogsStore = []; }
 }
 
 // ==========================================
@@ -58,6 +64,12 @@ function saveData() {
   setImmediate(() => {
     try { fs.writeFileSync(LINKS_FILE,   JSON.stringify(linksStore,   null, 2)); } catch (_) {}
     try { fs.writeFileSync(METRICS_FILE, JSON.stringify(metricsStore, null, 2)); } catch (_) {}
+  });
+}
+
+function saveWebhookLogs() {
+  setImmediate(() => {
+    try { fs.writeFileSync(WEBHOOK_LOGS_FILE, JSON.stringify(webhookLogsStore, null, 2)); } catch (_) {}
   });
 }
 
@@ -399,14 +411,34 @@ async function handleKommoWebhook(req, reply) {
   // 1. Procura o eventId embutido nos caracteres invisíveis
   const found = scanForZeroWidth(payloadToScan);
 
-  if (!found) {
-    // Procura o texto puro da mensagem recebida para logar
-    let receivedText = '';
-    try {
-      if (body.message?.add?.[0]?.text) receivedText = body.message.add[0].text;
-    } catch (_) {}
+  let receivedText = '';
+  try {
+    if (body.message?.add?.[0]?.text) receivedText = body.message.add[0].text;
+  } catch (_) {}
 
+  const clientIp = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+
+  if (!found) {
     console.log(`[Kommo Webhook] Mensagem recebida de "${contact.name || 'Desconhecido'}": "${receivedText}". Caracteres invisíveis: NÃO ENCONTRADOS.`);
+
+    // Registra log para visualização no painel admin
+    const logItem = {
+      id:           'wh_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      timestamp:    new Date().toISOString(),
+      ip:           clientIp,
+      sender:       contact.name || 'Desconhecido',
+      phone:        contact.phone || '',
+      receivedText: receivedText || 'Mensagem sem texto',
+      matched:      false,
+      eventId:      null,
+      campaign:     '-',
+      source:       '-',
+      statusText:   'Sem código invisível (texto comum digitado no WhatsApp)',
+      rawBody:      body
+    };
+    webhookLogsStore.unshift(logItem);
+    if (webhookLogsStore.length > 500) webhookLogsStore.pop();
+    saveWebhookLogs();
 
     return reply.send({
       success: true,
@@ -440,7 +472,7 @@ async function handleKommoWebhook(req, reply) {
     name:              contact.name  || 'Lead WhatsApp',
     cleanMessage:      cleanMsg || rawText,
     rawMessage:        rawText,
-    ip:                session?.ip || req.ip || '',
+    ip:                session?.ip || clientIp,
     userAgent:         session?.userAgent || req.headers['user-agent'] || '',
     device:            session?.device || detectDevice(session?.userAgent || ''),
     utms:              session?.utms || {},
@@ -457,6 +489,25 @@ async function handleKommoWebhook(req, reply) {
   if (leadsStore.length > 2000) leadsStore.pop();
   saveLeads();
 
+  // Registra log para visualização no painel admin
+  const logItem = {
+    id:           'wh_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    timestamp:    now.toISOString(),
+    ip:           clientIp,
+    sender:       contact.name || 'Lead WhatsApp',
+    phone:        contact.phone || session?.targetPhone || '',
+    receivedText: cleanMsg || rawText,
+    matched:      true,
+    eventId,
+    campaign:     session?.utms?.campaign || 'Direto',
+    source:       session?.utms?.source || 'Geral',
+    statusText:   `Match confirmado com clique! (${session?.utms?.campaign || 'Direto'})`,
+    rawBody:      body
+  };
+  webhookLogsStore.unshift(logItem);
+  if (webhookLogsStore.length > 500) webhookLogsStore.pop();
+  saveWebhookLogs();
+
   return reply.send({
     success: true,
     matched: true,
@@ -469,6 +520,25 @@ async function handleKommoWebhook(req, reply) {
 // Rotas de Webhook para o Kommo CRM (aceita /api/webhook/kommo e /webhook/kommo)
 app.post('/api/webhook/kommo', handleKommoWebhook);
 app.post('/webhook/kommo', handleKommoWebhook);
+
+// ==========================================
+// ADMIN — Logs do Webhook Kommo
+// ==========================================
+app.get('/api/admin/webhook-logs', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  return {
+    success: true,
+    total:   webhookLogsStore.length,
+    logs:    webhookLogsStore,
+  };
+});
+
+app.delete('/api/admin/webhook-logs', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  webhookLogsStore = [];
+  saveWebhookLogs();
+  return { success: true, message: 'Histórico de webhooks limpo.' };
+});
 
 // ==========================================
 // ADMIN — Leads & Rastreamento
