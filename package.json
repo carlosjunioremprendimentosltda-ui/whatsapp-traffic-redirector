@@ -18,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@fastify/compress": "^9.2.0",
     "@fastify/cors": "^11.3.0",
     "@fastify/formbody": "^9.0.0",
     "@fastify/static": "^10.1.3",
