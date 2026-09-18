@@ -103,9 +103,12 @@ function buildWhatsAppUrl(phone, message) {
   if (!phone) return '';
   let n = phone.replace(/\D/g, '');
   if (n.length === 10 || n.length === 11) n = '55' + n;
-  return message
-    ? `https://api.whatsapp.com/send/?phone=${n}&text=${encodeURIComponent(message)}&app_absent=0`
-    : `https://api.whatsapp.com/send/?phone=${n}&app_absent=0`;
+  const qs = new URLSearchParams({
+    phone: n,
+    ...(message ? { text: message } : {}),
+    app_absent: '0'
+  });
+  return `https://api.whatsapp.com/send/?${qs.toString()}`;
 }
 
 function mergeUtms(baseUrl, query) {
