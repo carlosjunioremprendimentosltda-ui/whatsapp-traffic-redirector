@@ -1,0 +1,62 @@
+[
+  {
+    "id": "grp_info",
+    "name": "Equipe Info",
+    "slug": "info",
+    "message": "Olá! Tenho interesse e queria mais informações, por favor.",
+    "active": true,
+    "roundRobinIndex": 1,
+    "totalClicks": 4,
+    "todayClicks": 4,
+    "lastResetDate": "2026-09-18",
+    "createdAt": "2026-09-18T22:20:00.000Z",
+    "numbers": [
+      {
+        "id": "num_1",
+        "name": "Atendente Principal",
+        "phone": "558698333158",
+        "active": true,
+        "totalClicks": 2,
+        "todayClicks": 2
+      },
+      {
+        "id": "num_1789770350021_rkmu",
+        "name": "Atendente 2 - Vendas",
+        "phone": "5586999990002",
+        "active": true,
+        "totalClicks": 1,
+        "todayClicks": 1
+      },
+      {
+        "id": "num_1789770350037_yfcl",
+        "name": "Atendente 3 - Suporte",
+        "phone": "5586999990003",
+        "active": true,
+        "totalClicks": 1,
+        "todayClicks": 1
+      }
+    ]
+  },
+  {
+    "id": "grp_1789770362942_suyh",
+    "name": "Campanha Vendas Black",
+    "slug": "vendas",
+    "message": "Olá! Vim pela promoção de Vendas.",
+    "active": true,
+    "roundRobinIndex": 1,
+    "totalClicks": 1,
+    "todayClicks": 1,
+    "lastResetDate": "2026-09-18",
+    "createdAt": "2026-09-18T22:26:02.942Z",
+    "numbers": [
+      {
+        "id": "num_v1",
+        "name": "Consultora Ana",
+        "phone": "5511999991111",
+        "active": true,
+        "totalClicks": 1,
+        "todayClicks": 1
+      }
+    ]
+  }
+]
