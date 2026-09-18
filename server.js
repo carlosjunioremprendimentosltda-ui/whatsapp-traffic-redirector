@@ -103,7 +103,9 @@ function buildWhatsAppUrl(phone, message) {
   if (!phone) return '';
   let n = phone.replace(/\D/g, '');
   if (n.length === 10 || n.length === 11) n = '55' + n;
-  return message ? `https://wa.me/${n}?text=${encodeURIComponent(message)}` : `https://wa.me/${n}`;
+  return message
+    ? `https://api.whatsapp.com/send/?phone=${n}&text=${encodeURIComponent(message)}&app_absent=0`
+    : `https://api.whatsapp.com/send/?phone=${n}&app_absent=0`;
 }
 
 function mergeUtms(baseUrl, query) {
@@ -226,9 +228,16 @@ function processRedirect(link, query, req) {
     } else if (link.url) {
       try {
         const u = new URL(link.url);
-        if (u.hostname.includes('wa.me') || u.hostname.includes('whatsapp.com')) {
+        if (u.hostname.includes('wa.me')) {
+          const phone = u.pathname.replace(/\D/g, '');
+          const currentText = u.searchParams.get('text') || settingsStore.defaultMessage || 'Olá!';
+          const msgWithHiddenId = zeroWidth.injectHiddenId(currentText, eventId);
+          raw = buildWhatsAppUrl(phone, msgWithHiddenId);
+        } else if (u.hostname.includes('whatsapp.com')) {
           const currentText = u.searchParams.get('text') || settingsStore.defaultMessage || 'Olá!';
           u.searchParams.set('text', zeroWidth.injectHiddenId(currentText, eventId));
+          u.searchParams.delete('type');
+          u.searchParams.set('app_absent', '0');
           raw = u.toString();
         } else {
           u.searchParams.set('event_id', eventId);
