@@ -13,6 +13,7 @@ const PORT     = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 
 const LINKS_FILE        = path.join(DATA_DIR, 'links.json');
+const GROUPS_FILE       = path.join(DATA_DIR, 'groups.json');
 const SETTINGS_FILE     = path.join(DATA_DIR, 'settings.json');
 const METRICS_FILE      = path.join(DATA_DIR, 'metrics.json');
 const SESSIONS_FILE     = path.join(DATA_DIR, 'sessions.json');
@@ -25,6 +26,7 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 // STORE EM MEMÓRIA (RAM) — acesso < 0.01ms
 // ==========================================
 let linksStore       = [];
+let groupsStore      = [];
 let settingsStore    = {};
 let metricsStore     = { totalRedirects: 0, todayRedirects: 0, roundRobinIndex: 0, logs: [], lastResetDate: '' };
 let sessionsStore    = new Map(); // eventId → { eventId, ip, utms, clickIds, userAgent, linkName, status, createdAt }
@@ -39,6 +41,7 @@ const rateLimitStore = new Map(); // ip    → { attempts, blockedUntil }
 // ==========================================
 function loadAll() {
   try { linksStore    = JSON.parse(fs.readFileSync(LINKS_FILE,    'utf-8')); } catch (_) { linksStore = []; }
+  try { groupsStore   = JSON.parse(fs.readFileSync(GROUPS_FILE,   'utf-8')); } catch (_) { groupsStore = []; }
   try { settingsStore = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8')); } catch (_) { settingsStore = {}; }
   try { metricsStore  = JSON.parse(fs.readFileSync(METRICS_FILE,  'utf-8')); } catch (_) {}
   if (!metricsStore.logs) metricsStore.logs = [];
@@ -76,6 +79,12 @@ function saveWebhookLogs() {
 function saveSettings() {
   setImmediate(() => {
     try { fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settingsStore, null, 2)); } catch (_) {}
+  });
+}
+
+function saveGroups() {
+  setImmediate(() => {
+    try { fs.writeFileSync(GROUPS_FILE, JSON.stringify(groupsStore, null, 2)); } catch (_) {}
   });
 }
 
@@ -142,7 +151,103 @@ function checkDailyReset() {
   metricsStore.todayRedirects   = 0;
   metricsStore.lastResetDate    = today;
   linksStore.forEach(l => { l.todayClicks = 0; l.lastResetDate = today; });
+  groupsStore.forEach(g => {
+    g.todayClicks = 0;
+    g.lastResetDate = today;
+    if (Array.isArray(g.numbers)) {
+      g.numbers.forEach(n => { n.todayClicks = 0; });
+    }
+  });
   saveData();
+  saveGroups();
+}
+
+// Seleciona próximo número da rotação de um Grupo específico (opera sobre RAM)
+function pickGroupNumber(group) {
+  checkDailyReset();
+  if (!group || !Array.isArray(group.numbers) || !group.numbers.length) return null;
+  const active = group.numbers.filter(n => n.active && n.phone);
+  if (!active.length) return null;
+
+  const idx = (group.roundRobinIndex || 0) % active.length;
+  group.roundRobinIndex = idx + 1;
+  const selected = active[idx];
+
+  selected.totalClicks = (selected.totalClicks || 0) + 1;
+  selected.todayClicks = (selected.todayClicks || 0) + 1;
+  group.totalClicks = (group.totalClicks || 0) + 1;
+  group.todayClicks = (group.todayClicks || 0) + 1;
+  saveGroups();
+
+  return selected;
+}
+
+// Processa o redirecionamento com steganografia para um grupo
+function processGroupRedirect(group, number, query, req) {
+  const ip      = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+  const ua      = req.headers['user-agent'] || '';
+  const referer = req.headers['referer'] || '';
+  const eventId = crypto.randomBytes(8).toString('hex');
+
+  const baseMsg = group.message || settingsStore.defaultMessage || 'Olá! Tenho interesse e queria mais informações, por favor.';
+  const msgWithHiddenId = zeroWidth.injectHiddenId(baseMsg, eventId);
+  const finalUrl = buildWhatsAppUrl(number.phone, msgWithHiddenId);
+
+  const sessionData = {
+    eventId,
+    createdAt: new Date().toISOString(),
+    ip,
+    userAgent: ua,
+    referer,
+    device: detectDevice(ua),
+    utms: {
+      source:   query.utm_source   || '',
+      medium:   query.utm_medium   || '',
+      campaign: query.utm_campaign || '',
+      content:  query.utm_content  || '',
+      term:     query.utm_term     || '',
+    },
+    clickIds: {
+      fbclid: query.fbclid || '',
+      gclid:  query.gclid  || '',
+      ttclid: query.ttclid || '',
+      sck:    query.sck    || '',
+    },
+    allParams:   query || {},
+    groupId:     group.id,
+    groupName:   group.name,
+    groupSlug:   group.slug,
+    numberId:    number.id,
+    targetPhone: number.phone,
+    status:      'pending',
+  };
+
+  sessionsStore.set(eventId, sessionData);
+  if (sessionsStore.size > 5000) {
+    const oldest = sessionsStore.keys().next().value;
+    sessionsStore.delete(oldest);
+  }
+  saveSessions();
+
+  metricsStore.totalRedirects = (metricsStore.totalRedirects || 0) + 1;
+  metricsStore.todayRedirects = (metricsStore.todayRedirects || 0) + 1;
+
+  metricsStore.logs = [{
+    id:        `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    eventId,
+    timestamp: new Date().toISOString(),
+    groupId:   group.id,
+    groupSlug: group.slug,
+    linkName:  `${group.name} (${number.name || number.phone})`,
+    targetUrl: finalUrl,
+    userAgent: ua,
+    device:    detectDevice(ua),
+    utms:      sessionData.utms,
+  }, ...(metricsStore.logs || [])].slice(0, 500);
+
+  saveData();
+
+  return finalUrl;
 }
 
 // Seleciona próximo link da rotação (opera sobre RAM)
@@ -330,13 +435,9 @@ function escapeHtml(str = '') {
 }
 
 // ==========================================
-// 🚀 ROTA PRINCIPAL — TINTIM INTERMEDIARY PAGE (3s) OU HTTP 302
+// 🚀 RENDERIZADOR DA PÁGINA INTERMEDIÁRIA TINTIM (3s) OU HTTP 302
 // ==========================================
-app.get('/', async (req, reply) => {
-  const query = req.query || {};
-  const link  = pickLink();
-  const url   = processRedirect(link, query, req);
-
+function sendIntermediaryPage(reply, url, options = {}) {
   const delay = settingsStore.redirectDelay !== undefined ? Number(settingsStore.redirectDelay) : 3000;
 
   // Se o delay estiver zerado nas configurações, faz o redirect 302 direto instantâneo
@@ -348,9 +449,9 @@ app.get('/', async (req, reply) => {
   const metaPixelId       = settingsStore.metaPixelId || '';
   const googleAnalyticsId = settingsStore.googleAnalyticsId || '';
   const customHeadScripts = settingsStore.customHeadScripts || '';
-  const title             = settingsStore.title       || 'Por favor, aguarde alguns segundos.';
-  const subtitle          = settingsStore.subtitle    || 'Estamos direcionando você para o WhatsApp.';
-  const buttonText        = settingsStore.buttonText  || 'Clique aqui se não for redirecionado';
+  const title             = options.title    || settingsStore.title    || 'Por favor, aguarde alguns segundos.';
+  const subtitle          = options.subtitle || settingsStore.subtitle || 'Estamos direcionando você para o WhatsApp.';
+  const buttonText        = settingsStore.buttonText || 'Clique aqui se não for redirecionado';
 
   let pixelScripts = '';
   if (metaPixelId) {
@@ -529,6 +630,84 @@ app.get('/', async (req, reply) => {
 </html>`;
 
   return reply.type('text/html; charset=utf-8').send(html);
+}
+
+// 🚀 ROTA RAIZ PADRÃO
+app.get('/', async (req, reply) => {
+  const query = req.query || {};
+  const link  = pickLink();
+  const url   = processRedirect(link, query, req);
+  return sendIntermediaryPage(reply, url);
+});
+
+// 🚀 ROTA DE GRUPOS PERSONALIZADOS POR SLUG (ex: /info, /vendas, /atendimento)
+app.get('/:slug', async (req, reply) => {
+  const slug = (req.params.slug || '').toLowerCase().trim();
+  const reserved = [
+    'admin', 'api', 'css', 'js', 'img', 'static', 'favicon.ico', 'webhook', 'preview', 'robots.txt'
+  ];
+  if (reserved.includes(slug)) {
+    return reply.callNotFound();
+  }
+
+  const group = groupsStore.find(g => (g.slug || '').toLowerCase() === slug);
+  if (!group || !group.active) {
+    return reply.code(404).type('text/html; charset=utf-8').send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Página não encontrada</title>
+        <style>
+          body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;height:100vh;align-items:center;justify-content:center;background:#EFEAE2;margin:0}
+          .box{background:#fff;padding:40px 30px;border-radius:16px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.06);max-width:380px;width:90%}
+          h2{color:#008069;margin-bottom:10px;font-size:1.3rem}
+          p{color:#555;font-size:.95rem;line-height:1.4}
+        </style>
+      </head>
+      <body>
+        <div class="box">
+          <h2>Link não encontrado</h2>
+          <p>O grupo ou slug <strong>/${escapeHtml(slug)}</strong> não existe ou está desativado.</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+
+  const pickedNumber = pickGroupNumber(group);
+  if (!pickedNumber) {
+    if (settingsStore.fallbackUrl) {
+      return reply.redirect(settingsStore.fallbackUrl);
+    }
+    return reply.type('text/html; charset=utf-8').send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Atendimento Indisponível</title>
+        <style>
+          body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;height:100vh;align-items:center;justify-content:center;background:#EFEAE2;margin:0}
+          .box{background:#fff;padding:40px 30px;border-radius:16px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.06);max-width:380px;width:90%}
+          h2{color:#008069;margin-bottom:10px;font-size:1.3rem}
+          p{color:#555;font-size:.95rem;line-height:1.4}
+        </style>
+      </head>
+      <body>
+        <div class="box">
+          <h2>Atendimento Indisponível</h2>
+          <p>Nenhum atendente cadastrado ou ativo no grupo <strong>${escapeHtml(group.name)}</strong> no momento.</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+
+  const query = req.query || {};
+  const url = processGroupRedirect(group, pickedNumber, query, req);
+  return sendIntermediaryPage(reply, url);
 });
 
 // ==========================================
@@ -945,6 +1124,139 @@ app.delete('/api/admin/links/:id', async (req, reply) => {
   if (linksStore.length === before) return reply.code(404).send({ success: false, message: 'Link não encontrado.' });
   saveData();
   return { success: true, message: 'Link removido com sucesso!' };
+});
+
+// ==========================================
+// ADMIN — Grupos & Slugs Personalizados (ex: /info)
+// ==========================================
+app.get('/api/admin/groups', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  checkDailyReset();
+  return { success: true, groups: groupsStore };
+});
+
+app.post('/api/admin/groups', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  const body = req.body || {};
+  const name = (body.name || '').trim();
+  let slug = (body.slug || '').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+  if (!slug) slug = 'grupo-' + Math.random().toString(36).slice(2, 7);
+
+  const reserved = ['admin', 'api', 'css', 'js', 'img', 'static', 'favicon.ico', 'webhook', 'preview', 'robots.txt'];
+  if (reserved.includes(slug)) {
+    return reply.code(400).send({ success: false, message: `O slug "${slug}" é uma palavra reservada do sistema.` });
+  }
+
+  if (groupsStore.some(g => g.slug === slug)) {
+    return reply.code(400).send({ success: false, message: `O slug "${slug}" já está em uso.` });
+  }
+
+  const newGroup = {
+    id: `grp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    name: name || `Grupo /${slug}`,
+    slug,
+    message: body.message !== undefined ? body.message.trim() : (settingsStore.defaultMessage || 'Olá! Tenho interesse e queria mais informações, por favor.'),
+    active: body.active !== undefined ? Boolean(body.active) : true,
+    roundRobinIndex: 0,
+    totalClicks: 0,
+    todayClicks: 0,
+    lastResetDate: new Date().toISOString().slice(0, 10),
+    createdAt: new Date().toISOString(),
+    numbers: Array.isArray(body.numbers) ? body.numbers : []
+  };
+
+  groupsStore.push(newGroup);
+  saveGroups();
+  return { success: true, group: newGroup, message: 'Grupo criado com sucesso!' };
+});
+
+app.put('/api/admin/groups/:id', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  const { id } = req.params;
+  const body = req.body || {};
+  const group = groupsStore.find(g => g.id === id);
+  if (!group) return reply.code(404).send({ success: false, message: 'Grupo não encontrado.' });
+
+  if (body.slug) {
+    const newSlug = body.slug.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+    const reserved = ['admin', 'api', 'css', 'js', 'img', 'static', 'favicon.ico', 'webhook', 'preview', 'robots.txt'];
+    if (reserved.includes(newSlug)) {
+      return reply.code(400).send({ success: false, message: `O slug "${newSlug}" é uma palavra reservada.` });
+    }
+    if (newSlug !== group.slug && groupsStore.some(g => g.id !== id && g.slug === newSlug)) {
+      return reply.code(400).send({ success: false, message: `O slug "${newSlug}" já está em uso.` });
+    }
+    group.slug = newSlug;
+  }
+
+  if (body.name !== undefined) group.name = body.name.trim();
+  if (body.message !== undefined) group.message = body.message.trim();
+  if (body.active !== undefined) group.active = Boolean(body.active);
+  if (Array.isArray(body.numbers)) group.numbers = body.numbers;
+
+  saveGroups();
+  return { success: true, group, message: 'Grupo atualizado com sucesso!' };
+});
+
+app.delete('/api/admin/groups/:id', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  const { id } = req.params;
+  const idx = groupsStore.findIndex(g => g.id === id);
+  if (idx === -1) return reply.code(404).send({ success: false, message: 'Grupo não encontrado.' });
+  groupsStore.splice(idx, 1);
+  saveGroups();
+  return { success: true, message: 'Grupo removido com sucesso!' };
+});
+
+app.post('/api/admin/groups/:id/numbers', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  const { id } = req.params;
+  const group = groupsStore.find(g => g.id === id);
+  if (!group) return reply.code(404).send({ success: false, message: 'Grupo não encontrado.' });
+
+  const body = req.body || {};
+  let phone = (body.phone || '').replace(/\D/g, '');
+  if (!phone) return reply.code(400).send({ success: false, message: 'Número de WhatsApp é obrigatório.' });
+  if (phone.length === 10 || phone.length === 11) phone = '55' + phone;
+
+  const newNumber = {
+    id: `num_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    name: (body.name || 'Atendente').trim(),
+    phone,
+    active: body.active !== undefined ? Boolean(body.active) : true,
+    totalClicks: 0,
+    todayClicks: 0,
+  };
+
+  if (!Array.isArray(group.numbers)) group.numbers = [];
+  group.numbers.push(newNumber);
+  saveGroups();
+  return { success: true, group, number: newNumber, message: 'Número adicionado ao grupo!' };
+});
+
+app.patch('/api/admin/groups/:id/numbers/:numberId/toggle', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  const { id, numberId } = req.params;
+  const group = groupsStore.find(g => g.id === id);
+  if (!group) return reply.code(404).send({ success: false, message: 'Grupo não encontrado.' });
+
+  const num = (group.numbers || []).find(n => n.id === numberId);
+  if (!num) return reply.code(404).send({ success: false, message: 'Número não encontrado no grupo.' });
+
+  num.active = !num.active;
+  saveGroups();
+  return { success: true, group, number: num, message: `Atendente ${num.active ? 'ativado' : 'desativado'}!` };
+});
+
+app.delete('/api/admin/groups/:id/numbers/:numberId', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  const { id, numberId } = req.params;
+  const group = groupsStore.find(g => g.id === id);
+  if (!group) return reply.code(404).send({ success: false, message: 'Grupo não encontrado.' });
+
+  group.numbers = (group.numbers || []).filter(n => n.id !== numberId);
+  saveGroups();
+  return { success: true, group, message: 'Número removido do grupo com sucesso!' };
 });
 
 // ==========================================
