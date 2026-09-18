@@ -8,7 +8,7 @@
   const btnText = document.getElementById('btnText');
 
   let targetUrl = '';
-  let delay = 2000;
+  let delay = 3000;
 
   try {
     // 1. Chamar a API backend para obter o próximo link da rotação
