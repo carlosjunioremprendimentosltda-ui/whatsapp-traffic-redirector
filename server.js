@@ -315,14 +315,125 @@ function checkAuth(req, reply) {
   return true;
 }
 
+function escapeHtml(str = '') {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ==========================================
-// 🚀 ROTA PRINCIPAL — HTTP 302 SERVER-SIDE
+// 🚀 ROTA PRINCIPAL — TINTIM INTERMEDIARY PAGE (3s) OU HTTP 302
 // ==========================================
 app.get('/', async (req, reply) => {
   const query = req.query || {};
   const link  = pickLink();
   const url   = processRedirect(link, query, req);
-  return reply.redirect(url);
+
+  const delay = settingsStore.redirectDelay !== undefined ? Number(settingsStore.redirectDelay) : 3000;
+
+  // Se o delay estiver zerado nas configurações, faz o redirect 302 direto instantâneo
+  if (delay === 0) {
+    return reply.redirect(url);
+  }
+
+  // Página intermediária estilo Tintim (3 segundos padrão)
+  const metaPixelId       = settingsStore.metaPixelId || '';
+  const googleAnalyticsId = settingsStore.googleAnalyticsId || '';
+  const customHeadScripts = settingsStore.customHeadScripts || '';
+  const title             = settingsStore.title       || 'Por favor, aguarde alguns segundos.';
+  const subtitle          = settingsStore.subtitle    || 'Estamos direcionando você para o WhatsApp.';
+  const buttonText        = settingsStore.buttonText  || 'Clique aqui se não for redirecionado';
+
+  let pixelScripts = '';
+  if (metaPixelId) {
+    pixelScripts += `
+      <script>
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+        n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+        document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '${metaPixelId}');
+        fbq('track', 'PageView');
+        fbq('track', 'Lead');
+      </script>
+    `;
+  }
+  if (googleAnalyticsId) {
+    pixelScripts += `
+      <script async src="https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${googleAnalyticsId}');
+        gtag('event', 'generate_lead');
+      </script>
+    `;
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Aguarde um momento...</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/redirect.css">
+  ${customHeadScripts}
+  ${pixelScripts}
+</head>
+<body>
+  <main class="redirect-card">
+    <div class="spinner-container">
+      <svg class="tintim-spinner" width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="7" r="3.5" fill="#008069" opacity="1"/>
+        <circle cx="39.4" cy="12.6" r="3.5" fill="#008069" opacity="0.87"/>
+        <circle cx="45" cy="26" r="3.5" fill="#008069" opacity="0.74"/>
+        <circle cx="39.4" cy="39.4" r="3.5" fill="#008069" opacity="0.61"/>
+        <circle cx="26" cy="45" r="3.5" fill="#008069" opacity="0.48"/>
+        <circle cx="12.6" cy="39.4" r="3.5" fill="#008069" opacity="0.35"/>
+        <circle cx="7" cy="26" r="3.5" fill="#008069" opacity="0.22"/>
+        <circle cx="12.6" cy="12.6" r="3.5" fill="#008069" opacity="0.12"/>
+      </svg>
+    </div>
+
+    <div class="text-content">
+      <h3 class="redirect-title">${escapeHtml(title)}</h3>
+      <p class="redirect-subtitle">${escapeHtml(subtitle)}</p>
+    </div>
+
+    <div id="fallbackAction" style="display: none; width: 100%;">
+      <a href="${url}" id="manualBtn" class="manual-btn">${escapeHtml(buttonText)}</a>
+    </div>
+  </main>
+
+  <script>
+    const targetUrl = ${JSON.stringify(url)};
+    const delay = ${delay};
+
+    if (targetUrl) {
+      setTimeout(function() {
+        window.location.href = targetUrl;
+      }, delay);
+
+      setTimeout(function() {
+        var fb = document.getElementById('fallbackAction');
+        if (fb) fb.style.display = 'block';
+      }, Math.max(delay + 1500, 4500));
+    }
+  </script>
+</body>
+</html>`;
+
+  return reply.type('text/html; charset=utf-8').send(html);
 });
 
 // ==========================================
