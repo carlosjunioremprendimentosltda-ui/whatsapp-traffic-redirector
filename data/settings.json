@@ -9,5 +9,6 @@
   "googleAnalyticsId": "",
   "customHeadScripts": "",
   "adminPin": "jr",
-  "requireAuth": false
+  "requireAuth": false,
+  "defaultMessage": "Olá! Tenho interesse e queria mais informações, por favor."
 }
