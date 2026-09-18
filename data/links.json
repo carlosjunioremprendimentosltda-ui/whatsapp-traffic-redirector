@@ -18,12 +18,12 @@
     "name": "WhatsApp Oficial (Kommo)",
     "phone": "558698333158",
     "message": "Olá! Vim pelo anúncio.",
-    "url": "https://wa.me/558698333158?text=Ol%C3%A1%21%20Vim%20pelo%20an%C3%BAncio.",
+    "url": "https://api.whatsapp.com/send/?phone=558698333158&text=Ol%C3%A1%21%20Vim%20pelo%20an%C3%BAncio.&app_absent=0",
     "active": true,
     "dailyLimit": 0,
     "weight": 1,
-    "totalClicks": 3,
-    "todayClicks": 3,
+    "totalClicks": 8,
+    "todayClicks": 8,
     "lastResetDate": "2026-09-17",
     "createdAt": "2026-09-06T18:20:00.000Z"
   }
