@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Estado local
   let currentLinks = [];
+  let currentGroups = [];
   let currentSettings = {};
   let qrCodeInstance = null;
 
@@ -10,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageTitle = document.getElementById('pageTitle');
   const pageSubtitle = document.getElementById('pageSubtitle');
 
-  // Modais
+  // Modais de Links
   const linkModal = document.getElementById('linkModal');
   const qrModal = document.getElementById('qrModal');
   const authModal = document.getElementById('authModal');
@@ -21,6 +22,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeLinkModalBtn = document.getElementById('closeLinkModalBtn');
   const cancelLinkModalBtn = document.getElementById('cancelLinkModalBtn');
   const closeQrModalBtn = document.getElementById('closeQrModalBtn');
+
+  // Modais de Grupos & Slugs
+  const groupModal = document.getElementById('groupModal');
+  const groupForm = document.getElementById('groupForm');
+  const groupIdInput = document.getElementById('groupIdInput');
+  const groupNameInput = document.getElementById('groupNameInput');
+  const groupSlugInput = document.getElementById('groupSlugInput');
+  const groupMessageInput = document.getElementById('groupMessageInput');
+  const groupActiveInput = document.getElementById('groupActiveInput');
+  const openAddGroupModalBtn = document.getElementById('openAddGroupModalBtn');
+  const closeGroupModalBtn = document.getElementById('closeGroupModalBtn');
+  const cancelGroupModalBtn = document.getElementById('cancelGroupModalBtn');
+  const modalGroupTitle = document.getElementById('modalGroupTitle');
+  const slugDomainPrefix = document.getElementById('slugDomainPrefix');
+
+  const groupNumberModal = document.getElementById('groupNumberModal');
+  const groupNumberForm = document.getElementById('groupNumberForm');
+  const groupNumberGroupIdInput = document.getElementById('groupNumberGroupIdInput');
+  const groupNumberNameInput = document.getElementById('groupNumberNameInput');
+  const groupNumberPhoneInput = document.getElementById('groupNumberPhoneInput');
+  const closeGroupNumberModalBtn = document.getElementById('closeGroupNumberModalBtn');
+  const cancelGroupNumberModalBtn = document.getElementById('cancelGroupNumberModalBtn');
+  const groupsListContainer = document.getElementById('groupsListContainer');
 
   // Gerenciamento de Autenticação / Token
   let adminToken = localStorage.getItem('adminToken') || '';
@@ -122,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1. Navegação de Abas
   const tabInfo = {
     dashboard: { title: 'Visão Geral do Tráfego', subtitle: 'Acompanhe a distribuição e o desempenho dos seus atendentes' },
+    groups: { title: 'Grupos & Slugs Personalizados', subtitle: 'Gerencie rotas exclusivas (ex: /info) com seus próprios grupos de números' },
     links: { title: 'Gerenciar Links de WhatsApp', subtitle: 'Ative ou desative atendentes para direcionar o tráfego instantaneamente' },
     strategy: { title: 'Estratégia de Distribuição', subtitle: 'Configure como os leads são distribuídos entre seus números' },
     analytics: { title: 'Origens UTM & Histórico', subtitle: 'Acompanhe o desempenho de suas campanhas de tráfego pago' },
@@ -164,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Carregar Dados Iniciais
   async function loadAllData() {
     try {
-      await Promise.all([loadStats(), loadSettings()]);
+      await Promise.all([loadStats(), loadSettings(), loadGroups()]);
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
       showToast('Erro ao carregar informações do servidor.', 'error');
@@ -1024,6 +1049,343 @@ document.addEventListener('DOMContentLoaded', () => {
       loadWebhookLogs();
     }
   }, 6000);
+
+  // ==========================================
+  // GERENCIAMENTO DE GRUPOS & SLUGS (/info)
+  // ==========================================
+  if (slugDomainPrefix) {
+    slugDomainPrefix.textContent = window.location.host + '/';
+  }
+
+  if (groupSlugInput) {
+    groupSlugInput.addEventListener('input', (e) => {
+      e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    });
+  }
+
+  if (openAddGroupModalBtn) {
+    openAddGroupModalBtn.addEventListener('click', () => {
+      openGroupModal();
+    });
+  }
+
+  if (closeGroupModalBtn) closeGroupModalBtn.addEventListener('click', closeGroupModal);
+  if (cancelGroupModalBtn) cancelGroupModalBtn.addEventListener('click', closeGroupModal);
+
+  function openGroupModal(group = null) {
+    if (!groupModal) return;
+    if (group) {
+      modalGroupTitle.textContent = 'Editar Grupo /' + group.slug;
+      groupIdInput.value = group.id;
+      groupNameInput.value = group.name || '';
+      groupSlugInput.value = group.slug || '';
+      groupMessageInput.value = group.message || '';
+      groupActiveInput.checked = group.active !== false;
+    } else {
+      modalGroupTitle.textContent = 'Novo Grupo de Redirecionamento';
+      groupIdInput.value = '';
+      groupNameInput.value = '';
+      groupSlugInput.value = '';
+      groupMessageInput.value = currentSettings?.defaultMessage || '';
+      groupActiveInput.checked = true;
+    }
+    groupModal.style.display = 'flex';
+  }
+
+  function closeGroupModal() {
+    if (groupModal) groupModal.style.display = 'none';
+  }
+
+  if (groupForm) {
+    groupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = groupIdInput.value;
+      const name = groupNameInput.value.trim();
+      const slug = groupSlugInput.value.trim();
+      const message = groupMessageInput.value.trim();
+      const active = groupActiveInput.checked;
+
+      if (!name || !slug) {
+        showToast('Nome e Slug são obrigatórios.', 'error');
+        return;
+      }
+
+      try {
+        const url = id ? `/api/admin/groups/${id}` : '/api/admin/groups';
+        const method = id ? 'PUT' : 'POST';
+        const res = await apiFetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, slug, message, active })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message || 'Grupo salvo com sucesso!', 'success');
+          closeGroupModal();
+          await loadGroups();
+        } else {
+          showToast(data.message || 'Erro ao salvar grupo.', 'error');
+        }
+      } catch (err) {
+        showToast('Erro de comunicação com o servidor.', 'error');
+      }
+    });
+  }
+
+  // Modal de Adicionar Número ao Grupo
+  if (closeGroupNumberModalBtn) closeGroupNumberModalBtn.addEventListener('click', closeGroupNumberModal);
+  if (cancelGroupNumberModalBtn) cancelGroupNumberModalBtn.addEventListener('click', closeGroupNumberModal);
+
+  function openGroupNumberModal(groupId) {
+    if (!groupNumberModal) return;
+    groupNumberGroupIdInput.value = groupId;
+    groupNumberNameInput.value = '';
+    groupNumberPhoneInput.value = '';
+    groupNumberModal.style.display = 'flex';
+  }
+
+  function closeGroupNumberModal() {
+    if (groupNumberModal) groupNumberModal.style.display = 'none';
+  }
+
+  if (groupNumberForm) {
+    groupNumberForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const groupId = groupNumberGroupIdInput.value;
+      const name = groupNumberNameInput.value.trim();
+      const phone = groupNumberPhoneInput.value.trim();
+
+      if (!groupId || !phone) {
+        showToast('Número de WhatsApp é obrigatório.', 'error');
+        return;
+      }
+
+      try {
+        const res = await apiFetch(`/api/admin/groups/${groupId}/numbers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, phone })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Número adicionado com sucesso!', 'success');
+          closeGroupNumberModal();
+          await loadGroups();
+        } else {
+          showToast(data.message || 'Erro ao adicionar número.', 'error');
+        }
+      } catch (err) {
+        showToast('Erro de comunicação com o servidor.', 'error');
+      }
+    });
+  }
+
+  // Carregar lista de grupos
+  async function loadGroups() {
+    try {
+      const res = await apiFetch('/api/admin/groups');
+      const data = await res.json();
+      if (!data.success) return;
+      currentGroups = data.groups || [];
+      renderGroups();
+    } catch (err) {
+      console.error('Erro ao carregar grupos:', err);
+    }
+  }
+
+  // Renderizar cartões de grupos
+  function renderGroups() {
+    if (!groupsListContainer) return;
+    if (!currentGroups.length) {
+      groupsListContainer.innerHTML = `
+        <div class="group-empty-numbers" style="padding: 40px 20px;">
+          <p style="font-size: 1.1rem; font-weight: 600; color: #444; margin-bottom: 8px;">Nenhum grupo ou slug criado ainda.</p>
+          <p class="text-muted" style="margin-bottom: 16px;">Crie um grupo como <code>/info</code> para agrupar e rotacionar atendentes específicos!</p>
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('openAddGroupModalBtn').click()">+ Criar Primeiro Grupo</button>
+        </div>
+      `;
+      return;
+    }
+
+    const currentOrigin = window.location.origin;
+
+    groupsListContainer.innerHTML = currentGroups.map(group => {
+      const fullUrl = `${currentOrigin}/${group.slug}`;
+      const numbers = Array.isArray(group.numbers) ? group.numbers : [];
+      const activeNumbersCount = numbers.filter(n => n.active).length;
+
+      const numbersHtml = numbers.length ? `
+        <table class="group-numbers-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Status</th>
+              <th>Atendente</th>
+              <th>WhatsApp</th>
+              <th>Cliques (Hoje / Total)</th>
+              <th style="width: 80px; text-align: right;">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${numbers.map(n => `
+              <tr>
+                <td>
+                  <label class="toggle-control-label" style="margin: 0; font-size: 0.8rem;">
+                    <input type="checkbox" ${n.active ? 'checked' : ''} onchange="window._toggleGroupNumber('${group.id}', '${n.id}')">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+                <td><strong>${escapeHtml(n.name || 'Atendente')}</strong></td>
+                <td>
+                  <a href="https://wa.me/${escapeHtml(n.phone)}" target="_blank" style="color: #008069; text-decoration: none; font-family: monospace; font-weight: 600;">
+                    💬 ${formatPhone(n.phone)}
+                  </a>
+                </td>
+                <td>
+                  <span class="badge" style="background: rgba(0, 128, 105, 0.1); color: #008069; font-weight: 700;">
+                    ${(n.todayClicks || 0).toLocaleString('pt-BR')} hoje
+                  </span>
+                  <span class="text-muted" style="font-size: 0.82rem; margin-left: 6px;">
+                    / ${(n.totalClicks || 0).toLocaleString('pt-BR')} total
+                  </span>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn btn-sm btn-outline btn-danger" style="padding: 4px 8px;" onclick="window._deleteGroupNumber('${group.id}', '${n.id}')" title="Remover atendente">
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : `
+        <div class="group-empty-numbers">
+          <p>Nenhum número cadastrado neste grupo ainda.</p>
+          <button class="btn btn-sm btn-outline mt-2" onclick="window._openAddNumberToGroup('${group.id}')">+ Adicionar Atendente</button>
+        </div>
+      `;
+
+      return `
+        <div class="group-card">
+          <div class="group-card-header">
+            <div class="group-title-area">
+              <h4>${escapeHtml(group.name)}</h4>
+              <span class="slug-pill" title="Clique no botão ao lado para copiar o link completo">
+                /${escapeHtml(group.slug)}
+                <button class="slug-copy-btn" onclick="window._copyGroupLink('${escapeHtml(group.slug)}')" title="Copiar link /${escapeHtml(group.slug)}">📋</button>
+              </span>
+              <span class="badge ${group.active ? 'badge-active' : 'badge-inactive'}">
+                ${group.active ? 'Ativo' : 'Pausado'}
+              </span>
+            </div>
+
+            <div class="group-meta">
+              <div class="group-meta-item">
+                <span>Cliques hoje:</span>
+                <strong>${(group.todayClicks || 0).toLocaleString('pt-BR')}</strong>
+              </div>
+              <div class="group-meta-item">
+                <span>Total:</span>
+                <strong>${(group.totalClicks || 0).toLocaleString('pt-BR')}</strong>
+              </div>
+              <div class="group-meta-item">
+                <span>Atendentes:</span>
+                <strong>${activeNumbersCount}/${numbers.length} ativos</strong>
+              </div>
+            </div>
+
+            <div class="group-card-actions">
+              <button class="btn btn-sm btn-primary" onclick="window._openAddNumberToGroup('${group.id}')">
+                + Adicionar Número
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="window._editGroup('${group.id}')">
+                ✏️ Editar
+              </button>
+              <button class="btn btn-sm btn-outline btn-danger" onclick="window._deleteGroup('${group.id}')">
+                🗑️ Excluir
+              </button>
+            </div>
+          </div>
+
+          <div class="group-numbers-section">
+            <div class="group-numbers-header">
+              <h5>👥 Números em Rotação neste Grupo (${numbers.length})</h5>
+              <a href="${fullUrl}" target="_blank" class="btn btn-sm btn-outline" style="font-size: 0.8rem;">
+                ⚡ Testar Link /${escapeHtml(group.slug)}
+              </a>
+            </div>
+            ${numbersHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Funções globais chamadas pelos botões inline
+  window._copyGroupLink = (slug) => {
+    const full = `${window.location.origin}/${slug}`;
+    navigator.clipboard.writeText(full).then(() => {
+      showToast(`Link copiado: ${full}`, 'success');
+    }).catch(() => {
+      prompt('Copie o link:', full);
+    });
+  };
+
+  window._openAddNumberToGroup = (groupId) => {
+    openGroupNumberModal(groupId);
+  };
+
+  window._editGroup = (groupId) => {
+    const group = currentGroups.find(g => g.id === groupId);
+    if (group) openGroupModal(group);
+  };
+
+  window._deleteGroup = async (groupId) => {
+    const group = currentGroups.find(g => g.id === groupId);
+    if (!group) return;
+    if (!confirm(`Tem certeza que deseja excluir o grupo "/${group.slug}"? Todos os números vinculados a ele deixarão de receber tráfego.`)) return;
+
+    try {
+      const res = await apiFetch(`/api/admin/groups/${groupId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Grupo excluído com sucesso.', 'success');
+        await loadGroups();
+      } else {
+        showToast(data.message || 'Erro ao excluir grupo.', 'error');
+      }
+    } catch (err) {
+      showToast('Erro de comunicação.', 'error');
+    }
+  };
+
+  window._toggleGroupNumber = async (groupId, numberId) => {
+    try {
+      const res = await apiFetch(`/api/admin/groups/${groupId}/numbers/${numberId}/toggle`, { method: 'PATCH' });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || 'Status atualizado.', 'success');
+        await loadGroups();
+      }
+    } catch (err) {
+      showToast('Erro ao alternar status.', 'error');
+    }
+  };
+
+  window._deleteGroupNumber = async (groupId, numberId) => {
+    if (!confirm('Deseja realmente remover este número deste grupo?')) return;
+    try {
+      const res = await apiFetch(`/api/admin/groups/${groupId}/numbers/${numberId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Número removido do grupo.', 'success');
+        await loadGroups();
+      } else {
+        showToast(data.message || 'Erro ao remover número.', 'error');
+      }
+    } catch (err) {
+      showToast('Erro de comunicação.', 'error');
+    }
+  };
 
   // Inicializar
   async function init() {
