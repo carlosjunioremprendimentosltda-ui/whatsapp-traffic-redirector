@@ -393,16 +393,7 @@ app.get('/', async (req, reply) => {
 <body>
   <main class="redirect-card">
     <div class="spinner-container">
-      <svg class="tintim-spinner" width="52" height="52" viewBox="0 0 52 52">
-        <circle cx="26" cy="7" r="3.5" fill="#008069" opacity="1"/>
-        <circle cx="39.4" cy="12.6" r="3.5" fill="#008069" opacity="0.87"/>
-        <circle cx="45" cy="26" r="3.5" fill="#008069" opacity="0.74"/>
-        <circle cx="39.4" cy="39.4" r="3.5" fill="#008069" opacity="0.61"/>
-        <circle cx="26" cy="45" r="3.5" fill="#008069" opacity="0.48"/>
-        <circle cx="12.6" cy="39.4" r="3.5" fill="#008069" opacity="0.35"/>
-        <circle cx="7" cy="26" r="3.5" fill="#008069" opacity="0.22"/>
-        <circle cx="12.6" cy="12.6" r="3.5" fill="#008069" opacity="0.12"/>
-      </svg>
+      <img class="spinner-img" width="50" height="50" src="/img/spin.gif" alt="Carregando...">
     </div>
 
     <div class="text-content">
