@@ -9,16 +9,26 @@
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%200%20100%20100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
   
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Aceleração de Rede: Preconnect WhatsApp e Preload Assets -->
+  <link rel="preconnect" href="https://api.whatsapp.com" crossorigin>
+  <link rel="dns-prefetch" href="https://api.whatsapp.com">
+  <link rel="preload" as="image" href="/img/bg-whats.png">
   
   <link rel="stylesheet" href="/css/redirect.css">
 </head>
 <body>
   <main class="redirect-card">
     <div class="spinner-container">
-      <img class="spinner-img" width="50" height="50" src="/img/spin.gif" alt="Carregando...">
+      <svg class="tintim-spinner" width="50" height="50" viewBox="0 0 50 50">
+        <circle cx="25" cy="6" r="3.2" fill="#008069" opacity="1"/>
+        <circle cx="38.4" cy="11.6" r="3.2" fill="#008069" opacity="0.87"/>
+        <circle cx="44" cy="25" r="3.2" fill="#008069" opacity="0.74"/>
+        <circle cx="38.4" cy="38.4" r="3.2" fill="#008069" opacity="0.61"/>
+        <circle cx="25" cy="44" r="3.2" fill="#008069" opacity="0.48"/>
+        <circle cx="11.6" cy="38.4" r="3.2" fill="#008069" opacity="0.35"/>
+        <circle cx="6" cy="25" r="3.2" fill="#008069" opacity="0.22"/>
+        <circle cx="11.6" cy="11.6" r="3.2" fill="#008069" opacity="0.12"/>
+      </svg>
     </div>
 
     <div class="text-content">
@@ -33,6 +43,6 @@
     </div>
   </main>
 
-  <script src="/js/redirect.js"></script>
+  <script src="/js/redirect.js" defer></script>
 </body>
 </html>
