@@ -22,8 +22,8 @@
     "active": true,
     "dailyLimit": 0,
     "weight": 1,
-    "totalClicks": 10,
-    "todayClicks": 2,
+    "totalClicks": 12,
+    "todayClicks": 4,
     "lastResetDate": "2026-09-18",
     "createdAt": "2026-09-06T18:20:00.000Z"
   }
