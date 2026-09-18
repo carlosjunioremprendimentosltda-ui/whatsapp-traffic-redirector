@@ -290,13 +290,18 @@ function processRedirect(link, query, req) {
 // ==========================================
 const app = Fastify({ logger: false, trustProxy: true });
 
+// Compressão HTTP (Gzip/Brotli) para aceleração máxima de transferência
+app.register(require('@fastify/compress'), { global: true });
+
 // Suporte a CORS, estáticos e URL-encoded (Kommo Webhooks)
 app.register(require('@fastify/cors'), { origin: true });
 app.register(require('@fastify/formbody'));
 app.register(require('@fastify/static'), {
-  root:   path.join(__dirname, 'public'),
-  prefix: '/',
-  index:  false,
+  root:      path.join(__dirname, 'public'),
+  prefix:    '/',
+  index:     false,
+  maxAge:    '1y',
+  immutable: true,
 });
 
 // ==========================================
@@ -383,17 +388,116 @@ app.get('/', async (req, reply) => {
   <meta name="robots" content="noindex,nofollow">
   <title>Aguarde um momento...</title>
   
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/redirect.css">
+  <!-- Aceleração de Rede: Preconnect antecipado ao WhatsApp para redirecionamento sem latência -->
+  <link rel="preconnect" href="https://api.whatsapp.com" crossorigin>
+  <link rel="dns-prefetch" href="https://api.whatsapp.com">
+  <link rel="preload" as="image" href="/img/bg-whats.png">
+
+  <!-- CSS Crítico Inlined: 0 requisições HTTP adicionais, renderiza em < 5ms -->
+  <style>
+    *,*:before,*:after{margin:0;padding:0;box-sizing:border-box}
+    body{
+      width:100vw;
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#EFEAE2 url("/img/bg-whats.png") repeat;
+      overflow:hidden;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    main.redirect-card{
+      width:90%;
+      max-width:370px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      flex-direction:column;
+      gap:28px;
+      padding:46px 32px 40px;
+      background:#FFFFFF;
+      border-radius:16px;
+      box-shadow:0 8px 40px 0 rgba(0,0,0,0.04);
+      color:#444444;
+      text-align:center;
+      animation:cardFade .25s ease-out;
+      will-change:transform,opacity;
+    }
+    @keyframes cardFade{
+      from{opacity:0;transform:scale(0.97)}
+      to{opacity:1;transform:scale(1)}
+    }
+    .spinner-container{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      width:50px;
+      height:50px;
+    }
+    .tintim-spinner{
+      width:50px;
+      height:50px;
+      animation:tintimRotate 1s linear infinite;
+      transform-origin:center center;
+      will-change:transform;
+    }
+    @keyframes tintimRotate{
+      from{transform:rotate(0deg)}
+      to{transform:rotate(360deg)}
+    }
+    .text-content{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .redirect-title{
+      color:#008069;
+      font-size:1.25rem;
+      font-weight:700;
+      line-height:1.35;
+      margin:0;
+    }
+    .redirect-subtitle{
+      color:#444444;
+      font-size:1rem;
+      font-weight:400;
+      line-height:1.45;
+      margin:0;
+    }
+    .manual-btn{
+      display:inline-block;
+      margin-top:10px;
+      background-color:#008069;
+      color:#ffffff;
+      font-size:0.9rem;
+      font-weight:600;
+      padding:12px 20px;
+      border-radius:25px;
+      text-decoration:none;
+      box-shadow:0 4px 12px rgba(0,128,105,0.25);
+      transition:background-color .2s;
+    }
+    .manual-btn:hover{background-color:#006b57}
+  </style>
+
   ${customHeadScripts}
   ${pixelScripts}
 </head>
 <body>
   <main class="redirect-card">
     <div class="spinner-container">
-      <img class="spinner-img" width="50" height="50" src="/img/spin.gif" alt="Carregando...">
+      <svg class="tintim-spinner" width="50" height="50" viewBox="0 0 50 50">
+        <circle cx="25" cy="6" r="3.2" fill="#008069" opacity="1"/>
+        <circle cx="38.4" cy="11.6" r="3.2" fill="#008069" opacity="0.87"/>
+        <circle cx="44" cy="25" r="3.2" fill="#008069" opacity="0.74"/>
+        <circle cx="38.4" cy="38.4" r="3.2" fill="#008069" opacity="0.61"/>
+        <circle cx="25" cy="44" r="3.2" fill="#008069" opacity="0.48"/>
+        <circle cx="11.6" cy="38.4" r="3.2" fill="#008069" opacity="0.35"/>
+        <circle cx="6" cy="25" r="3.2" fill="#008069" opacity="0.22"/>
+        <circle cx="11.6" cy="11.6" r="3.2" fill="#008069" opacity="0.12"/>
+      </svg>
     </div>
 
     <div class="text-content">
@@ -412,7 +516,7 @@ app.get('/', async (req, reply) => {
 
     if (targetUrl) {
       setTimeout(function() {
-        window.location.href = targetUrl;
+        window.location.replace(targetUrl);
       }, delay);
 
       setTimeout(function() {
