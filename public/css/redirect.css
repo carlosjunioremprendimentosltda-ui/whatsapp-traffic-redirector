@@ -12,33 +12,33 @@ body {
   justify-content: center;
   align-items: center;
   background-color: #EFEAE2;
-  background-image: radial-gradient(#dcd5c9 1.2px, transparent 1.2px),
-    url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20 Q 30 10 40 20 T 60 20' fill='none' stroke='%23ded8cd' stroke-width='1.5' opacity='0.7'/%3E%3Cpath d='M80 30 Q 95 15 110 30' fill='none' stroke='%23ded8cd' stroke-width='1.5' opacity='0.6'/%3E%3Ccircle cx='70' cy='65' r='6' fill='none' stroke='%23ded8cd' stroke-width='1.5' opacity='0.6'/%3E%3Cpath d='M15 80 Q 25 70 35 80 T 55 80' fill='none' stroke='%23ded8cd' stroke-width='1.5' opacity='0.6'/%3E%3Cpath d='M85 95 Q 100 80 115 95' fill='none' stroke='%23ded8cd' stroke-width='1.5' opacity='0.7'/%3E%3Crect x='90' y='50' width='12' height='12' rx='3' fill='none' stroke='%23ded8cd' stroke-width='1.5' opacity='0.5'/%3E%3Ccircle cx='25' cy='50' r='5' fill='none' stroke='%23ded8cd' stroke-width='1.5' opacity='0.5'/%3E%3C/svg%3E");
-  background-size: 16px 16px, 160px 160px;
+  background-image: url("/img/bg-whats.png");
+  background-repeat: repeat;
   overflow: hidden;
 }
 
-main.redirect-card {
+main.redirect-card,
+main {
   width: 90%;
-  max-width: 380px;
+  max-width: 370px;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
   gap: 28px;
-  padding: 48px 36px 42px;
+  padding: 46px 32px 40px;
   background: #FFFFFF;
   border-radius: 16px;
   box-shadow: 0 8px 40px 0 rgba(0, 0, 0, 0.04);
   color: #444444;
   text-align: center;
-  animation: cardFade 0.4s ease-out;
+  animation: cardFade 0.3s ease-out;
 }
 
 @keyframes cardFade {
   from {
     opacity: 0;
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
   to {
     opacity: 1;
@@ -50,30 +50,20 @@ main.redirect-card {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 52px;
-  height: 52px;
+  width: 50px;
+  height: 50px;
 }
 
-.tintim-spinner {
-  width: 52px;
-  height: 52px;
-  animation: tintimRotate 1s linear infinite;
-  transform-origin: center center;
-}
-
-@keyframes tintimRotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.spinner-img {
+  width: 50px;
+  height: 50px;
+  display: block;
 }
 
 .text-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .redirect-title {
@@ -81,12 +71,15 @@ main.redirect-card {
   font-size: 1.25rem;
   font-weight: 700;
   line-height: 1.35;
+  margin: 0;
 }
 
 .redirect-subtitle {
-  color: #54656f;
-  font-size: 0.98rem;
+  color: #444444;
+  font-size: 1rem;
+  font-weight: 400;
   line-height: 1.45;
+  margin: 0;
 }
 
 .manual-btn {
